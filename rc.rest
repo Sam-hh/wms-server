@@ -1,0 +1,6 @@
+POST http://localhost:2002/products/category
+Content-Type: application/json
+
+{
+
+}
