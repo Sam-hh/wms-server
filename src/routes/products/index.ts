@@ -63,17 +63,17 @@ export default function (
       ...(request.body as Object),
       dateAdded: new Date(),
     }).catch((err) => {
-      reply
-        .status(err.code == '11000' ? 400 : 500)
-        .send({ message: err.message });
+      reply.status(400).send({ message: err.message });
     });
     product && reply.status(201).send(product);
   });
   fastify.get('/:category', async (request, reply) => {
-    const products: Array<IProduct> = (request.params as any).category
-      ? await Product.find({ category: (request.params as any).category })
+    const products: Array<IProduct> | null = (request.params as any).category
+      ? await Product.find({
+          category: (request.params as any).category,
+        }).catch((err) => reply.status(400).send({ message: err.message }))
       : await Product.find({});
-    reply.status(200).send(products);
+    products && reply.status(200).send(products);
   });
   done();
 }
