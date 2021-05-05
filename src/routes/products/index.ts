@@ -72,7 +72,9 @@ export default function (
       ? await Product.find({
           category: (request.params as any).category,
         }).catch((err) => reply.status(400).send({ message: err.message }))
-      : await Product.find({});
+      : await Product.find({})
+          .populate({ path: 'category', select: 'name' })
+          .populate({ path: 'supplier', select: 'name' });
     products && reply.status(200).send(products);
   });
   done();
