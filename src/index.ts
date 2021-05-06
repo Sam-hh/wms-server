@@ -15,6 +15,9 @@ dotenv.config();
 
 const app: FastifyInstance = fastify({ logger: true });
 app.register(require('fastify-websocket'));
+app.register(require('fastify-jwt'), {
+  secret: 'verySecretString',
+});
 
 app.register(dashboard, { prefix: 'dashboard' });
 app.register(pms, { prefix: 'pms' });
@@ -26,6 +29,11 @@ app.register(users, { prefix: 'users' });
 
 app.get('/ws', { websocket: true }, (connection: SocketStream) => {
   WSConnections.push(connection);
+});
+
+app.post('/login', (request, reply) => {
+  const token = app.jwt.sign({ type: 'Employee' });
+  reply.send({ token });
 });
 
 app.listen(2002, async (err, address) => {

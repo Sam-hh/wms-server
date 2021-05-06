@@ -40,5 +40,11 @@ export default function (
     if (notification)
       reply.status(201).send({ message: 'Created Notification' });
   });
+  fastify.get('/notifications', async (request, reply) => {
+    const notifications: Array<INotification> = await Notification.find({})
+      .sort({ _id: -1 })
+      .limit(10);
+    reply.status(200).send(notifications);
+  });
   done();
 }
