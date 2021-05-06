@@ -1,5 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { INotification, Notification } from '../../scheama/notification';
+import { IPurchase, Purchase } from '../../scheama/purchase';
+import { Product } from '../../scheama/product';
 import { User } from '../../scheama/user';
 
 export default function (
@@ -9,7 +11,27 @@ export default function (
 ) {
   fastify.get('/', async (request, reply) => {
     const customers: number = await User.find({ accountType: 'c' }).count();
-    reply.status(200).send({ customers });
+    const dateToday = new Date();
+    dateToday.setHours(0, 0, 0, 0);
+    // TODO: Replace this with aggregation framework
+    const sales: Array<IPurchase> = await Purchase.find({
+      purchaseTime: {
+        $gte: dateToday,
+      },
+    });
+    let sum = 0;
+    sales.forEach((i) => (sum += i.price));
+    const products: number = await Product.find({
+      dateAdded: {
+        $gte: dateToday,
+      },
+    }).count();
+    const notifications: number = await Notification.find({
+      dateAdded: {
+        $gte: dateToday,
+      },
+    }).count();
+    reply.status(200).send({ customers, sales: sum, products, notifications });
   });
   fastify.post('/notification', async (request, reply) => {
     const notification: INotification = await Notification.create({

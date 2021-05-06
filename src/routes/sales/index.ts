@@ -7,8 +7,11 @@ export default function (
   done: Function
 ) {
   fastify.get('/', async (request, reply) => {
-    const purchases: Array<IPurchase> = await Purchase.find({});
+    const purchases: Array<IPurchase> = await Purchase.find({})
+      .populate('product')
+      .populate('user');
     reply.status(200).send(purchases);
   });
+  fastify;
   done();
 }
