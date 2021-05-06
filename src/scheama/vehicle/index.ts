@@ -34,6 +34,7 @@ const VehicleSchema = new Schema({
     type: Number,
     required: true,
   },
+  entryTime: Date,
 });
 
 const Vehicle: Model<IVehicle> = model('Vehicle', VehicleSchema);

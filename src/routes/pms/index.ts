@@ -18,6 +18,9 @@ export default function (
     reply.status(202).send({ message: 'Updated' });
   });
   fastify.post('/parking', async (request, reply) => {
+    if (!eval(process.env.ALLOW_PARKING as string)) {
+      reply.status(403).send({ message: 'Parking Disabled' });
+    }
     const parkedVehicle: IVehicle = await Vehicle.create({
       ...(request.body as Object),
       entryTime: new Date(),

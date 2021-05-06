@@ -10,6 +10,7 @@ export default function (
   fastify.post('/', async (request, reply) => {
     const purchase: IPurchase = await Purchase.create({
       ...(request.body as object),
+      purchaseTime: new Date(),
     }).catch((err) => reply.status(400).send({ message: err.message }));
     if (purchase) reply.status(201).send(purchase);
   });
