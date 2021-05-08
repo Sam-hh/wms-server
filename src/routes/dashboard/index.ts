@@ -10,11 +10,13 @@ export default function (
   done: Function
 ) {
   fastify.addHook('onRequest', async (request, reply) => {
-    try {
-      const jwt: any = await (request as any).jwtVerify();
-      if (jwt.type !== 'e') throw new Error('Unauthorized');
-    } catch (err) {
-      reply.status(400).send(err);
+    if (request.routerPath !== '/dashboard/notifications') {
+      try {
+        const jwt: any = await (request as any).jwtVerify();
+        if (jwt.type !== 'e') throw new Error('Unauthorized');
+      } catch (err) {
+        reply.status(400).send(err);
+      }
     }
   });
   fastify.get('/', async (request, reply) => {
