@@ -40,7 +40,14 @@ const PurchaseSchema = new Schema({
 
 PurchaseSchema.post('findOneAndDelete', async (doc: IPurchase, next) => {
   await Refund.create({
-    ...doc,
+    purchaseTime: doc.purchaseTime,
+    category: doc.category,
+    product: doc.product,
+    user: doc.user,
+    price: doc.price,
+    tax: doc.tax,
+    quantity: doc.quantity,
+    description: doc.description,
     refundTime: new Date(),
   }).catch(next);
   next(null);

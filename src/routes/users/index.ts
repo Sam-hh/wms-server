@@ -1,12 +1,21 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { IUser, User } from '../../scheama/user';
 import bcrypt from 'bcryptjs';
+import { sendMail } from '../../utils/mailer';
 
 export default function (
   fastify: FastifyInstance,
   opts: FastifyPluginOptions,
   done: Function
 ) {
+  fastify.addHook('onRequest', async (request, reply) => {
+    try {
+      const jwt: any = await (request as any).jwtVerify();
+      if (jwt.type !== 'e') throw new Error('Unauthorized');
+    } catch (err) {
+      reply.status(400).send(err);
+    }
+  });
   fastify.get('/:email', async (request, reply) => {
     if (!(request.params as any).email) {
       const users: Array<IUser> = await User.find({});
@@ -20,10 +29,11 @@ export default function (
   });
   fastify.post('/', async (request, reply) => {
     const newUser = request.body;
-    if (!(newUser as IUser).password) {
+    if (!request.body || !(newUser as IUser).password) {
       reply.status(400).send({ message: 'Password is required' });
       return;
     }
+    const { password } = request.body as any;
     bcrypt.genSalt(8, function (err, salt) {
       bcrypt.hash((newUser as IUser).password, salt, async (err, hash) => {
         if (err) {
@@ -35,6 +45,13 @@ export default function (
           ...(request.body as Object),
           registeredAt: new Date(),
         }).catch((err) => reply.status(400).send({ message: err.message }));
+        console.log(password);
+        user &&
+          (await sendMail(
+            user.email,
+            'Account Created',
+            `<h2>Account Created</h2><br><p>Account Information</p><br><b>Email</b>: ${user.email}<br><b>Password</b>: ${password}`
+          ));
         user && reply.status(201).send(user);
       });
     });
@@ -44,24 +61,29 @@ export default function (
       reply.status(400).send({ message: 'User id is required' });
       return;
     }
+    const password = Math.random().toString(36);
     bcrypt.genSalt(8, function (err, salt) {
-      bcrypt.hash(
-        Math.random().toString(36).substring(2, 12),
-        salt,
-        async (err, hash) => {
-          if (err) {
-            reply.status(500).send(err);
-            return;
-          }
-          const user: IUser | null = await User.findByIdAndUpdate(
-            (request.params as any).userID,
-            {
-              password: hash,
-            }
-          ).catch((err) => reply.status(500).send({ message: err.message }));
-          if (user) reply.status(200).send({ message: 'User updated' });
+      bcrypt.hash(password, salt, async (err, hash) => {
+        if (err) {
+          reply.status(500).send(err);
+          return;
         }
-      );
+        const user: IUser | null = await User.findByIdAndUpdate(
+          (request.params as any).userID,
+          {
+            password: hash,
+          }
+        ).catch((err) => reply.status(500).send({ message: err.message }));
+
+        if (user) {
+          await sendMail(
+            user.email,
+            'Account Updated',
+            `<h2>Account Upxated</h2><br><p>Account Information</p><br><b>Email</b>: ${user.email}<br><b>Password</b>: ${password}`
+          );
+          reply.status(200).send({ message: 'User updated' });
+        }
+      });
     });
   });
   done();

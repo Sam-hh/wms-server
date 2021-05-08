@@ -9,6 +9,14 @@ export default function (
   opts: FastifyPluginOptions,
   done: Function
 ) {
+  fastify.addHook('onRequest', async (request, reply) => {
+    try {
+      const jwt: any = await (request as any).jwtVerify();
+      if (jwt.type !== 'e') throw new Error('Unauthorized');
+    } catch (err) {
+      reply.status(400).send(err);
+    }
+  });
   fastify.get('/', async (request, reply) => {
     const customers: number = await User.find({ accountType: 'c' }).count();
     const dateToday = new Date();
