@@ -86,5 +86,29 @@ export default function (
       });
     });
   });
+  fastify.patch('/update/:userID', async (request, reply) => {
+    if (!(request.params as any).userID) {
+      reply.status(400).send({ message: 'User id is required' });
+      return;
+    }
+    const user: IUser | null = await User.findByIdAndUpdate(
+      (request.params as any).userID,
+      {
+        ...(request.body as any),
+      }
+    ).catch((err) => reply.status(500).send({ message: err.message }));
+    if (user) reply.status(200).send({ ack: true });
+  });
+  fastify.delete('/:userID', async (request, reply) => {
+    if (!(request.params as any).userID) {
+      reply.status(400).send({ message: 'User id is required' });
+      return;
+    }
+    const user: IUser | null = await User.findByIdAndDelete(
+      (request.params as any).userID
+    ).catch((err) => reply.status(500).send({ message: err.message }));
+    if (user) reply.status(200).send({ message: 'User deleted' });
+    else reply.status(400).send();
+  });
   done();
 }
